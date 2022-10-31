@@ -1,7 +1,8 @@
 import {
   ColorSchemeProvider,
   MantineProvider,
-  ColorScheme
+  ColorScheme,
+  MantineTheme
 } from '@mantine/core';
 import { useState } from 'react';
 import { DefaultSeo } from 'next-seo';
@@ -48,7 +49,7 @@ function App(props: AppPropsWithLayout) {
     Component.getLayout ??
     ((page) => (
       <Layout
-        navbar={{
+        headerProps={{
           links: Object.values(appRoutes)
         }}
       >
@@ -65,10 +66,12 @@ function App(props: AppPropsWithLayout) {
         <MantineProvider
           withNormalizeCSS
           withGlobalStyles
-          theme={{
-            colorScheme,
-            ...rest
-          }}
+          theme={
+            {
+              colorScheme,
+              ...rest
+            } as MantineTheme
+          }
         >
           <QueryClientProvider client={queryClient}>
             <DefaultSeo {...SEOConfig} />

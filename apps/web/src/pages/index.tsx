@@ -12,7 +12,6 @@ import {
   Badge
 } from '@mantine/core';
 import { NextPage } from 'next';
-import NextLink from 'next/link';
 import { NextSeo } from 'next-seo';
 import { BadgeLink } from 'shared/components';
 

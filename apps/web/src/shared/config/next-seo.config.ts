@@ -1,10 +1,10 @@
 import { DefaultSeoProps } from 'next-seo';
 
 export const SEOConfig: DefaultSeoProps = {
-  titleTemplate: '%s | nextjs-mantine-template',
-  defaultTitle: 'nextjs-mantine-template',
-  description: 'A template for Next.js with Mantine UI',
-  canonical: 'https://nextjs-mantine-template.deploy.cnoside.dev',
+  titleTemplate: '%s | File Uploader',
+  defaultTitle: 'File Uploader',
+  description: 'A file uploading web app',
+  canonical: 'https://file-uploader.deploy.cnoside.dev',
   additionalLinkTags: [
     {
       rel: 'icon',
@@ -12,15 +12,15 @@ export const SEOConfig: DefaultSeoProps = {
     }
   ],
   openGraph: {
-    url: 'https://nextjs-mantine-template.deploy.cnoside.dev',
-    title: 'nextjs-mantine-template',
+    url: 'https://file-uploader.deploy.cnoside.dev',
+    title: 'File Uploader',
     type: 'website',
-    site_name: 'nextjs-mantine-template',
+    site_name: 'File Uploader',
     locale: 'en_SG',
     images: [
       {
         url: 'https://dev-cnoside.sgp1.digitaloceanspaces.com/shared/images/nextjs-mantine-template.og-image.jpg',
-        alt: 'nextjs-mantine-template og:image',
+        alt: 'File Uploader og:image',
         width: 1280,
         height: 640
       }

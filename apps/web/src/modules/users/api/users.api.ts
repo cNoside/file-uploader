@@ -16,7 +16,7 @@ export class UsersAPI {
   constructor(private readonly axios: AxiosInstance = client) {}
 
   async findAll(): Promise<FindUsersResponse> {
-    // const res = await this.axios.get<FindUsersResponse>('/users');
+    // const res = await this.axios.get('/users');
     // return res.data;
 
     await sleep();

@@ -1,4 +1,4 @@
-export interface IServerValidationError {
-  field: string;
+export interface IServerValidationError<T extends Record<string, any> = any> {
+  field: keyof T;
   message: string;
 }

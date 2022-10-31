@@ -1,1 +1,1 @@
-export * from './generate-user';
+export * from './generate-user.util';

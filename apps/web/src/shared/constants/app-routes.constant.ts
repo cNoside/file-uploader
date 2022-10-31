@@ -4,5 +4,9 @@ export const APP_ROUTES = {
   PROTECTED: '/protected',
   ADMIN: '/admin',
   LOGIN: '/login',
-  UNAUTHORISED: '/unauthorised'
+  UNAUTHORISED: '/unauthorised',
+  UPLOAD: '/upload',
+  DASHBOARD: '/dashboard',
+  USERS: '/users',
+  FILES: '/files'
 };
