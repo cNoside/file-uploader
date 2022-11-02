@@ -7,10 +7,18 @@ import {
   IconTrash
 } from '@tabler/icons';
 import { truncate } from 'lodash';
-import { Avatar, Group, Menu, Text, UnstyledButton } from '@mantine/core';
+import {
+  Avatar,
+  Button,
+  Group,
+  Menu,
+  Text,
+  UnstyledButton
+} from '@mantine/core';
 
 import { IUser } from 'modules/users';
 import { faker } from '@faker-js/faker';
+import { useSession } from '../../../../modules/auth/hooks/use-session.hook';
 
 type Props = {
   user?: IUser;
@@ -18,6 +26,8 @@ type Props = {
 
 export const UserMenu = (props: Props) => {
   const { user } = props;
+
+  const { login, logout } = useSession();
 
   return (
     <Menu withArrow width={300} position="bottom" transition="pop">
@@ -58,6 +68,9 @@ export const UserMenu = (props: Props) => {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
+        <Menu.Item onClick={() => login('root@internal.com', 'root')}>
+          Login
+        </Menu.Item>
         <Menu.Label>Settings</Menu.Label>
         <Menu.Item icon={<IconSettings size={14} stroke={1.5} />}>
           Account settings
@@ -65,7 +78,10 @@ export const UserMenu = (props: Props) => {
         <Menu.Item icon={<IconSwitchHorizontal size={14} stroke={1.5} />}>
           Change account
         </Menu.Item>
-        <Menu.Item icon={<IconLogout size={14} stroke={1.5} />}>
+        <Menu.Item
+          icon={<IconLogout size={14} stroke={1.5} />}
+          onClick={() => logout()}
+        >
           Logout
         </Menu.Item>
 

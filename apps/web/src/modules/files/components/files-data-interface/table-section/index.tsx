@@ -16,7 +16,7 @@ import { MantineTheme, useMantineTheme } from '@mantine/core';
 
 type Props = {
   files: IFile[];
-  onChange: (selected: string[]) => void;
+  onChange: (selected: number[]) => void;
 };
 
 export const TableSection = (props: Props) => {
@@ -24,8 +24,8 @@ export const TableSection = (props: Props) => {
 
   const theme = useMantineTheme();
 
-  const [selected, setSelected] = useState<string[]>([]);
-  const toggleOne = (id: string) =>
+  const [selected, setSelected] = useState<number[]>([]);
+  const toggleOne = (id: number) =>
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((_id) => _id !== id) : [...prev, id]
     );

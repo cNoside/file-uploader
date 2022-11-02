@@ -1,7 +1,7 @@
 import { IUser } from 'modules/users';
 
 export interface IBaseModel {
-  id: string;
+  id: number;
   createdOn?: string;
   updatedOn?: string;
   createdBy?: IUser;

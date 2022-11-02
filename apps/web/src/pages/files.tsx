@@ -8,8 +8,13 @@ import {
   SegmentedControl
 } from '@mantine/core';
 import { IconSearch } from '@tabler/icons';
-import { FilesDataInterface, getFilesSSR, IFile } from 'modules/files';
-import { FileUploadDropzone } from 'modules/uploads';
+import {
+  FileDropzone,
+  FilesDataInterface,
+  getFilesSSR,
+  IFile
+} from 'modules/files';
+import { useFiles } from 'modules/files/hooks/use-files.hook';
 import { GetServerSideProps, NextPage } from 'next';
 import { NextSeo } from 'next-seo';
 
@@ -37,7 +42,18 @@ type Props = ServerSideProps;
 const Files: NextPage<Props> = (props) => {
   const { classes } = useStyles();
   const theme = useMantineTheme();
-  const { files } = props;
+  const { files: initialData } = props;
+
+  const { data } = useFiles({
+    initialData: {
+      status: 'success',
+      data: {
+        files: initialData
+      }
+    },
+    // refetchInterval: 1000
+  });
+  const files = data?.data.files || [];
 
   return (
     <>
@@ -45,7 +61,7 @@ const Files: NextPage<Props> = (props) => {
       <Container className={classes.container}>
         <section className={classes.uploadSection}>
           <Title order={2}>Upload Files</Title>
-          <FileUploadDropzone />
+          <FileDropzone />
         </section>
 
         <section className={classes.filesSection}>

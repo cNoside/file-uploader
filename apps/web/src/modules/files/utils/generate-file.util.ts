@@ -6,13 +6,14 @@ import { generateUser } from 'modules/users';
 type Props = Partial<IFile>;
 
 export const generateFile = (props?: Props): IFile => ({
-  id: props?.id || String(faker.helpers.unique(faker.datatype.number)),
-  name: props?.name || faker.system.fileName(),
-  path: props?.path || faker.image.imageUrl(),
-  size: props?.size || faker.datatype.number(),
-  type: props?.type || faker.system.mimeType(),
-  visibility:
-    props?.visibility || faker.helpers.arrayElement(['public', 'private']),
+  id: props?.id || faker.helpers.unique(faker.datatype.number),
+  filename: props?.filename || faker.system.fileName(),
+  url: props?.url || faker.image.imageUrl(),
+  contentLength: props?.contentLength || faker.datatype.number(),
+  contentType: props?.contentType || faker.system.mimeType(),
+  ownerId: props?.ownerId || faker.helpers.unique(faker.datatype.number),
+  // visibility:
+  //   props?.visibility || faker.helpers.arrayElement(['public', 'private']),
   extension: props?.extension || faker.helpers.arrayElement(EXTENSIONS),
   createdOn: props?.createdOn || faker.date.past(1).toISOString(),
   updatedOn: props?.updatedOn || faker.date.past(0).toISOString(),

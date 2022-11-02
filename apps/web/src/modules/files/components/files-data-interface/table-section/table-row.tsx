@@ -5,7 +5,10 @@ import {
   ActionIcon,
   useMantineTheme,
   Popover,
-  Text
+  Text,
+  Loader,
+  Tooltip,
+  CopyButton
 } from '@mantine/core';
 import { getFileIcon } from '../../../utils/get-file-icon.util';
 import { FileNameInput } from './name-input.component';
@@ -15,19 +18,25 @@ import {
   IconShare,
   IconTrash,
   IconX,
-  IconChevronDown
+  IconChevronDown,
+  IconExternalLink,
+  IconCheck
 } from '@tabler/icons';
 import { IFile } from 'modules/files';
 import { useState, useEffect, useMemo } from 'react';
 import { difference, isEqual } from 'lodash';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { clientFilesAPI } from '../../../api/files.api';
 import { IServerValidationError } from '../../../../../shared/interfaces/server-validation-error.interface';
+import { client } from '../../../../../shared/config/axios.config';
+import { Menu } from '@mantine/core';
+import NextLink from 'next/link';
+import { IconLink } from '@tabler/icons';
 
 type Props = {
   file: IFile;
   isSelected: boolean;
-  onChange: (filename: string) => void;
+  onChange: (id: number) => void;
 };
 
 export const TableRow = (props: Props) => {
@@ -35,9 +44,8 @@ export const TableRow = (props: Props) => {
 
   const theme = useMantineTheme();
 
-  const [filename, setFilename] = useState(file.name);
+  const [filename, setFilename] = useState(file.filename);
   const handleFilenameChange = (newFilename: string) => {
-    console.log('handleFilenameChange', newFilename);
     setFilename(newFilename);
   };
 
@@ -76,12 +84,28 @@ export const TableRow = (props: Props) => {
   }, [mutation.data?.status]);
   const handleClosePopover = () => {
     setPopoverOpened(false);
-    setFilename(file.name);
+    setFilename(file.filename);
     mutation.reset();
   };
 
-  // trigger handleClosePopover when clicking outside of popover
+  // TODO: trigger handleClosePopover when clicking outside of popover
   let popoverRef: HTMLDivElement | null = null;
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation(
+    () => {
+      return clientFilesAPI.deleteFile(file.id);
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['/files']);
+      }
+    }
+  );
+  const handleDelete = () => {
+    deleteMutation.mutate();
+  };
 
   return (
     <tr
@@ -98,70 +122,107 @@ export const TableRow = (props: Props) => {
         <Group>
           {getFileIcon({ extension: file.extension })}
           <FileNameInput filename={filename} onChange={handleFilenameChange} />
-          <Badge
+          {/* <Badge
             size="xs"
             color={file.visibility === 'private' ? 'gray' : 'green'}
           >
             {file.visibility}
-          </Badge>
+          </Badge> */}
         </Group>
       </td>
-      <td>{getFileSizeString(file.size)}</td>
+      <td>{getFileSizeString(file.contentLength)}</td>
       <td>
-        <Group spacing="sm">
-          <ActionIcon variant="light" color="teal">
-            <IconShare />
-          </ActionIcon>
-          <Popover
-            opened={popoverOpened}
-            width={200}
-            position="bottom-end"
-            shadow="md"
-            withArrow
-          >
-            <Popover.Target>
-              {popoverOpened ? (
-                <ActionIcon
-                  variant="light"
-                  color="red"
-                  onClick={handleClosePopover}
+        <Group spacing="sm" position="right">
+          <Group spacing="sm">
+            <NextLink href={file.url} passHref>
+              <a target="_blank">
+                <Tooltip label="Open" position="right">
+                  <ActionIcon>
+                    <IconExternalLink />
+                  </ActionIcon>
+                </Tooltip>
+              </a>
+            </NextLink>
+            <CopyButton value={file.url} timeout={2000}>
+              {({ copied, copy }) => (
+                <Tooltip
+                  label={copied ? 'Copied' : 'Copy'}
+                  position="right"
+                  withArrow
                 >
-                  <IconX />
-                </ActionIcon>
-              ) : (
-                <ActionIcon
-                  variant="light"
-                  color="blue"
-                  disabled={!isDirty}
-                  onClick={handleSave}
-                >
-                  <IconDeviceFloppy />
-                </ActionIcon>
+                  <ActionIcon color={copied ? 'teal' : 'gray'} onClick={copy}>
+                    {copied ? <IconCheck size={25} /> : <IconLink size={25} />}
+                  </ActionIcon>
+                </Tooltip>
               )}
-            </Popover.Target>
-            <Popover.Dropdown>
-              {mutation.data?.status === 'fail' &&
-                mutation.data.data.errors.map((error, i) => (
-                  <Text
+            </CopyButton>
+            <Popover
+              opened={popoverOpened}
+              width={200}
+              position="bottom-end"
+              shadow="md"
+              withArrow
+            >
+              <Popover.Target>
+                {popoverOpened ? (
+                  <ActionIcon
+                    variant="light"
                     color="red"
-                    sx={{ display: 'flex', alignItems: 'center' }}
-                    key={`validation-error-message-${i}`}
-                    size="sm"
-                    mb={5}
+                    onClick={handleClosePopover}
                   >
-                    <IconX size={15} />
-                    <Text ml="xs">{error.message}</Text>
-                  </Text>
-                ))}
-            </Popover.Dropdown>
-          </Popover>
-
-          <ActionIcon variant="light" color="red">
-            <IconTrash />
-          </ActionIcon>
-          <ActionIcon ml="sm">
-            <IconChevronDown />
-          </ActionIcon>
+                    <IconX />
+                  </ActionIcon>
+                ) : (
+                  <ActionIcon
+                    variant="light"
+                    color="blue"
+                    disabled={!isDirty}
+                    onClick={handleSave}
+                  >
+                    <IconDeviceFloppy />
+                  </ActionIcon>
+                )}
+              </Popover.Target>
+              <Popover.Dropdown>
+                {mutation.data?.status === 'fail' &&
+                  mutation.data.data.errors.map((error, i) => (
+                    <Text
+                      color="red"
+                      sx={{ display: 'flex', alignItems: 'center' }}
+                      key={`validation-error-message-${i}`}
+                      size="sm"
+                      mb={5}
+                    >
+                      <IconX size={15} />
+                      <Text ml="xs">{error.message}</Text>
+                    </Text>
+                  ))}
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
+          <Menu width={200}>
+            <Menu.Target>
+              <ActionIcon ml="sm">
+                <IconChevronDown />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item>Share</Menu.Item>
+              <Menu.Item
+                onClick={handleDelete}
+                color="red"
+                icon={
+                  deleteMutation.isLoading ? (
+                    <Loader size={14} />
+                  ) : (
+                    <IconTrash size={14} />
+                  )
+                }
+              >
+                Delete
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
       </td>
     </tr>

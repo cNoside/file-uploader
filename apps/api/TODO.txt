@@ -1,0 +1,10 @@
+maybe add buffer field to model?
+
+combine
+directory based searches (auth'd)
+just like s3
+ with
+unique sharaeable links (unauth'd)
+just like google docs
+
+ETag: "d41d8cd98f00b204e9800998ecf8427e"

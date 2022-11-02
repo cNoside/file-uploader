@@ -10,9 +10,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Upload {
-  id   Int    @id @default(autoincrement())
-  name String
-  url  String // path to file on server
-  size Int
+model User {
+  id Int @id @default(autoincrement())
+
+  username String @unique
+  email    String @unique
+  password String
+
+  files File[]
+}
+
+// model StorageObject {
+//   id Int @id @default(autoincrement())
+
+//   key      String @unique
+//   metadata Json
+
+//   files File[]
+// }
+
+// model StorageObjectMetadata {
+//   id Int @id @default(autoincrement())
+
+//   key   String
+//   value String
+
+//   storedObject   StoredObject @relation(fields: [storedObjectId], references: [id])
+//   storedObjectId Int
+// }
+
+model File {
+  id Int @id @default(autoincrement())
+
+  key           String @unique
+  ownerId       Int
+  filename      String
+  contentType   String
+  contentLength Int
+
+  // storageObject StorageObject @relation(fields: [storageObjectKey], references: [key])
+  owner      User        @relation(fields: [ownerId], references: [id])
+  shareFiles ShareFile[]
+}
+
+model ShareFile {
+  id Int @id @default(autoincrement())
+
+  url    String @unique
+  fileId Int
+
+  file File @relation(fields: [fileId], references: [id])
 }

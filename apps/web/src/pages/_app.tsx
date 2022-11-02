@@ -58,28 +58,28 @@ function App(props: AppPropsWithLayout) {
     ));
 
   return (
-    <SessionProvider session={props.session}>
-      <ColorSchemeProvider
-        colorScheme={colorScheme}
-        toggleColorScheme={toggleColorScheme}
-      >
-        <MantineProvider
-          withNormalizeCSS
-          withGlobalStyles
-          theme={
-            {
-              colorScheme,
-              ...rest
-            } as MantineTheme
-          }
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider session={props.session}>
+        <ColorSchemeProvider
+          colorScheme={colorScheme}
+          toggleColorScheme={toggleColorScheme}
         >
-          <QueryClientProvider client={queryClient}>
+          <MantineProvider
+            withNormalizeCSS
+            withGlobalStyles
+            theme={
+              {
+                colorScheme,
+                ...rest
+              } as MantineTheme
+            }
+          >
             <DefaultSeo {...SEOConfig} />
             {getLayout(<Component {...pageProps} />)}
-          </QueryClientProvider>
-        </MantineProvider>
-      </ColorSchemeProvider>
-    </SessionProvider>
+          </MantineProvider>
+        </ColorSchemeProvider>
+      </SessionProvider>
+    </QueryClientProvider>
   );
 }
 

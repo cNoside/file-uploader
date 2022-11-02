@@ -6,9 +6,12 @@ import { faker } from '@faker-js/faker';
 import { sleep } from 'shared/utils';
 import { IServerValidationError } from '../../../shared/interfaces/server-validation-error.interface';
 
-type FindFilesResponse = IResponse<{ files: IFile[] }, 'success'>;
+export type FindFilesResponse = IResponse<{ files: IFile[] }, 'success'>;
 
 type FindFileResponse = IResponse<{ file: IFile }, 'success'>;
+
+type CreateFileSuccessResponse = IResponse<{ file: IFile }, 'success'>;
+type CreateFileResponse = CreateFileSuccessResponse;
 
 type UpdateFileSuccessResponse = IResponse<{ message: string }, 'success'>;
 type UpdateFileFailResponse = IResponse<
@@ -17,12 +20,16 @@ type UpdateFileFailResponse = IResponse<
 >;
 type UpdateFileResponse = UpdateFileSuccessResponse | UpdateFileFailResponse;
 
+type DeleteFileSuccessResponse = IResponse<{ message: string }, 'success'>;
+type DeleteFileResponse = DeleteFileSuccessResponse;
+
 export class FilesAPI extends BaseAPI {
   async findAll(): Promise<FindFilesResponse> {
-    // const res = await this.axios.get('/files');
-    // return res.data;
-
     await sleep();
+
+    const res = await this.axios.get('/files');
+    return res.data;
+
     return {
       status: 'success',
       data: {
@@ -38,11 +45,12 @@ export class FilesAPI extends BaseAPI {
     };
   }
 
-  async findOne(id: string): Promise<FindFileResponse> {
+  async findOne(id: number): Promise<FindFileResponse> {
+    await sleep();
+
     // const res = await this.axios.get(`/files/${id}`);
     // return res.data;
 
-    await sleep();
     return {
       status: 'success',
       data: {
@@ -51,39 +59,59 @@ export class FilesAPI extends BaseAPI {
     };
   }
 
+  async create(userId: number, dto: FormData): Promise<CreateFileResponse> {
+    await sleep();
+
+    // const res = await this.axios.get(`/files/users/${userId}`);
+    const res = await this.axios.post(`/files/users/${1}`, dto, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return res.data;
+  }
+
   async updateOne(
-    id: string,
+    id: number,
     data: Partial<IFile>
   ): Promise<UpdateFileResponse> {
+    await sleep();
+
     // const res = await this.axios.patch(`/files/${id}`, data);
     // return res.data;
 
-    await sleep();
     const isSuccess = faker.datatype.boolean();
-    // if (isSuccess) {
-    //   return {
-    //     status: 'success',
-    //     data: {
-    //       message: 'File updated successfully'
-    //     }
-    //   };
-    // }
+    if (isSuccess) {
+      return {
+        status: 'success',
+        data: {
+          message: 'File updated successfully'
+        }
+      };
+    }
     return {
       status: 'fail',
       data: {
         message: 'Validation failed',
         errors: [
           {
-            field: 'name',
-            message: 'Name already exists'
+            field: 'ownerId',
+            message: 'ownerId is not valid'
           },
           {
-            field: 'name',
-            message: 'Extension is not allowed'
+            field: 'filename',
+            message: 'Invalid filename'
           }
         ]
       }
     };
+  }
+
+  async deleteFile(id: number): Promise<DeleteFileResponse> {
+    await sleep(1000);
+
+    const res = await this.axios.delete(`/files/${id}`);
+    return res.data;
   }
 }
 

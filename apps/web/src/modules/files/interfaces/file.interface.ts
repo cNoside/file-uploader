@@ -2,10 +2,11 @@ import { IBaseModel } from 'shared/interfaces';
 import { FileVisibiltiy } from 'modules/files';
 
 export interface IFile extends IBaseModel {
-  name: string;
-  path: string;
-  type: string;
+  ownerId: number;
+  filename: string;
   extension: string;
-  size: number;
-  visibility: FileVisibiltiy;
+  contentType: string;
+  contentLength: number;
+  url: string;
+  // visibility: FileVisibiltiy;
 }

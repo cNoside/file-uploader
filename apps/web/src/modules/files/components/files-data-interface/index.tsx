@@ -36,7 +36,7 @@ import { TableSection } from './table-section';
 import { HeaderSection } from './header-section';
 import { VisiblityFilter } from './filters-section/file-visibility-filter.component';
 import { FiltersSection } from './filters-section';
-import { PaginationSection } from '../pagination-section';
+import { PaginationSection } from './pagination-section';
 
 const useStyles = createStyles((theme) => {
   return {
@@ -65,7 +65,7 @@ function filterFiles(
   files: IFile[],
   search: string,
   filters: FileFilters,
-  searchKeys: Array<keyof IFile> = ['name']
+  searchKeys: Array<keyof IFile> = ['filename']
 ) {
   const query = search.toLowerCase().trim();
   const filteredFiles = files.filter((file) => {
@@ -73,10 +73,11 @@ function filterFiles(
       String(file[key])?.toLowerCase().trim().includes(query)
     );
 
-    const isVisibilityMatch =
-      filters.visiblity === 'all'
-        ? true
-        : file.visibility === filters.visiblity;
+    // const isVisibilityMatch =
+    //   filters.visiblity === 'all'
+    //     ? true
+    //     : file.visibility === filters.visiblity;
+    const isVisibilityMatch = true;
 
     return isQueryMatch && isVisibilityMatch;
   });
@@ -128,7 +129,7 @@ export const FilesDataInterface = (props: Props) => {
     [files, debouncedSearch, visibilityFilter, pagination.active, itemsPerPage]
   );
   const [selected, setSelected] = useState<IFile[]>([]);
-  const handleSelectedChange = (value: string[]) => {
+  const handleSelectedChange = (value: number[]) => {
     const selectedFiles = files.filter((file) => value.includes(file.id));
     setSelected(selectedFiles);
   };
