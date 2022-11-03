@@ -1,9 +1,4 @@
-import { Response } from 'express';
-
-export interface IFile {
-  key: string;
-  buffer: Buffer;
-}
+import { IFile } from './file.model';
 
 export interface IFileStorageService {
   findFile(key: string): Promise<IFile>;

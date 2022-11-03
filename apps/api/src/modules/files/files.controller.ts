@@ -11,42 +11,50 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
-  Res
+  Res,
+  BadRequestException
 } from '@nestjs/common';
-import { FilesService } from './files.service';
-import { CreateFileDto } from './dto/create-file.dto';
+import { FileService } from './files.service';
+import { UploadFileDTO } from './dto/upload-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
-import { FileMap } from './mappers/file.mapper';
+import { FileMapper } from './mappers/file.mapper';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { getFilePath } from './utils';
 import { FileFactory } from './factories/file.factory';
 import * as send from 'send';
 import { Request, Response } from 'express';
 import * as pathModule from 'path';
+import { FileStorage } from 'modules/storage/decorators/file-storage.decorator';
+import { IFileStorageService } from 'modules/storage/models/file-storage-service.model';
+import stream from 'stream';
+import { RenameFileDto } from './dto/rename-file.dto';
 
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(
+    private readonly fileService: FileService,
+    private readonly fileMapper: FileMapper
+  ) {}
 
   @Get()
   async findAll() {
-    const files = await this.filesService.findAll();
-    const DTOs = files.map(FileMap.toDTO);
+    const files = await this.fileService.findAll();
+    const filesDTO = files.map(this.fileMapper.toDTO);
     return {
       status: 'success',
       data: {
-        files: DTOs
+        files: filesDTO
       }
     };
   }
 
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    const file = await this.filesService.findOne(id);
+    const file = await this.fileService.findById(id);
     if (!file) {
       throw new NotFoundException();
     }
-    const DTO = FileMap.toDTO(file);
+    const DTO = this.fileMapper.toDTO(file);
     return {
       status: 'success',
       data: {
@@ -55,65 +63,33 @@ export class FilesController {
     };
   }
 
-  // implement rbac
-  @Get(':id/view')
-  async viewRedirect(
-    @Param('id', ParseIntPipe) id: number,
-    @Res() res: Response
-  ) {
-    const file = await this.filesService.findOne(id);
-    if (!file) {
-      throw new NotFoundException();
-    }
-    return res.redirect(`/files/${file.id.value}/${file.filename.value}`);
-  }
-
   @Get(':id/download')
-  async downloadRedirect(
-    @Param('id', ParseIntPipe) id: number,
-    @Res() res: Response
-  ) {
-    const file = await this.filesService.findOne(id);
-    if (!file) {
-      throw new NotFoundException();
-    }
-    return res.redirect(
-      `/files/${file.id.value}/${file.filename.value}/download`
-    );
-  }
-
-  @Get(':id/:filename')
-  async view(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
-    const file = await this.filesService.findOne(id);
-    if (!file) {
-      throw new NotFoundException();
-    }
-    const path = getFilePath(file);
-    return res.sendFile(path);
-  }
-
-  @Get(':id/:filename/download')
   async download(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
-    const file = await this.filesService.findOne(id);
+    const file = await this.fileService.findById(id);
     if (!file) {
       throw new NotFoundException();
     }
 
-    const path = getFilePath(file);
-    return res.download(path, file.filename.value);
+    const buffer = await this.fileService.getBuffer(file.key);
+    res.setHeader(
+      'Content-disposition',
+      `attachment; filename=${file.filename.value}`
+    );
+    res.setHeader('Content-type', file.contentType);
+    return res.send(buffer);
   }
 
   @Post('/users/:userId')
   @UseInterceptors(FileInterceptor('file'))
-  async create(
+  async uploadToUser(
     @UploadedFile() file: Express.Multer.File,
     @Param('userId', ParseIntPipe) userId: number
   ) {
-    const createdFile = await this.filesService.create(
+    const uploadedFile = await this.fileService.upload(
       { userId, filename: file.originalname },
       file.buffer
     );
-    const DTO = FileMap.toDTO(createdFile);
+    const DTO = this.fileMapper.toDTO(uploadedFile);
     return {
       status: 'success',
       data: {
@@ -122,26 +98,33 @@ export class FilesController {
     };
   }
 
-  @Patch(':id')
-  async update(
+  @Post(':id/rename')
+  async rename(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateFileDto: UpdateFileDto
+    @Body() renameFileDTO: RenameFileDto
   ) {
-    const isSuccess = await this.filesService.update(id, updateFileDto);
-    if (!isSuccess) {
+    const file = await this.fileService.findById(id);
+    if (!file) {
       throw new NotFoundException();
+    }
+    const isSuccess = await this.fileService.rename(
+      file.id.value,
+      renameFileDTO.filename
+    );
+    if (!isSuccess) {
+      throw new BadRequestException();
     }
     return {
       status: 'success',
       data: {
-        message: 'File updated'
+        message: 'File renamed successfully'
       }
     };
   }
 
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {
-    const isSuccess = await this.filesService.remove(id);
+    const isSuccess = await this.fileService.delete(id);
     if (!isSuccess) {
       throw new NotFoundException();
     }

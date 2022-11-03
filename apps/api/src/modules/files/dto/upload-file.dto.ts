@@ -1,8 +1,9 @@
 import { IsDefined, IsNumber, IsString, MinLength } from 'class-validator';
 
-export class CreateFileDto {
+export class UploadFileDTO {
   @IsNumber()
   readonly userId: number;
+
   @IsString()
   @IsDefined()
   @MinLength(1)

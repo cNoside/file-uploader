@@ -1,9 +1,12 @@
-import path from 'path';
+import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { promises as fs } from 'fs';
 
-import { IFileStorageService, IFile } from './storage.service';
+import { IFile } from './models/file.model';
+import { IFileStorageService } from './models/file-storage-service.model';
+import { Injectable, Scope } from '@nestjs/common';
 
+@Injectable()
 export class FSFileStorageService implements IFileStorageService {
   public async findFile(key: string): Promise<IFile> {
     try {
@@ -13,7 +16,7 @@ export class FSFileStorageService implements IFileStorageService {
         key,
         buffer
       };
-    } catch {
+    } catch (err) {
       return null;
     }
   }

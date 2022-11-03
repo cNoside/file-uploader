@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFileDto } from './dto/create-file.dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { UploadFileDTO } from './dto/upload-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
 import { FileFactory } from './factories/file.factory';
 import { FileModel } from './models/file.model';
@@ -8,98 +8,111 @@ import { promises as fs } from 'fs';
 import * as mime from 'mime-types';
 import { getFilePath } from './utils';
 import { FileRepository } from './file.repository';
-import { FSFileStorageService } from '../storage/fs-storage.service';
+import { FSFileStorageService } from '../storage/fs-file-storage.service';
+import { FileStorage } from 'modules/storage/decorators/file-storage.decorator';
+import { IFileStorageService } from 'modules/storage/models/file-storage-service.model';
+import { FileMapper } from './mappers/file.mapper';
+import { getContentTypeFromFilename } from './utils/get-content-type-from-filename.util';
+import { FILE_STORAGE_SERVICE_TOKEN } from '../storage/constants/tokens.constant';
 
 // TODO: abstract lower level CRUD operations into a generic repository
 // TODO: only leave domain specific operations in this service, e.g. findByOwnerId, rename, etc.
 
-interface IFileService {}
+interface IFileService {
+  findAll(): Promise<FileModel[]>;
+  findAllByOwnerId(ownerId: number): Promise<FileModel[]>;
+  findById(id: number): Promise<FileModel>;
+  findByKey(key: string): Promise<FileModel>;
+  getBuffer(key: string): Promise<Buffer>;
+  upload(dto: UpdateFileDto, buffer: Buffer): Promise<FileModel>;
+  delete(id: number): Promise<boolean>;
+  rename(id: number, filename: string): Promise<boolean>;
+  changeOwner(id: number, ownerId: number): Promise<boolean>;
+}
 
 @Injectable()
 export class FileService implements IFileService {
-  constructor(private readonly fileRepository: FileRepository, fileStorageService: FSFileStorageService) {}
+  constructor(
+    private readonly fileMapper: FileMapper,
+    private readonly fileRepository: FileRepository,
+    @FileStorage()
+    private readonly fileStorageService: IFileStorageService
+  ) {}
 
-  async findAll(): Promise<FileModel[]> {
+  public async findAll(): Promise<FileModel[]> {
     const files = await this.fileRepository.findAll();
     return files;
   }
 
-  async findAllByOwnerId(ownerId: number): Promise<FileModel[]> {
+  public async findAllByOwnerId(ownerId: number): Promise<FileModel[]> {
     const files = await this.fileRepository.findAllByOwnerId(ownerId);
     return files;
   }
 
-  async findById(id: number): Promise<FileModel> {
+  public async findById(id: number): Promise<FileModel> {
     const file = await this.fileRepository.findById(id);
     return file;
   }
 
-  async findByKey(key: string): Promise<FileModel> {
+  public async findByKey(key: string): Promise<FileModel> {
     const file = await this.fileRepository.findByKey(key);
     return file;
   }
 
-  async create(dto: CreateFileDto, data: Buffer): Promise<FileModel> {
-    const key = uuidv4();
-
-    const { userId, filename } = dto;
-    const extension = filename.split('.').pop();
-
-    const fileEntity = await this.prisma.file.create({
-      data: {
-        ownerId: userId,
-        key,
-        filename,
-        contentType: mime.contentType(filename) || 'application/octet-stream',
-        contentLength: data.byteLength
-      }
-    });
-    // await fs.writeFile(`${process.env.STORAGE_PATH}/${key}.${extension}`, data);
-
-    return FileFactory.entityToModel(fileEntity);
+  public async getBuffer(key: string) {
+    const { buffer } = await this.fileStorageService.findFile(key);
+    return buffer;
   }
 
-  async update(id: number, updateFileDto: UpdateFileDto): Promise<boolean> {
-    const { filename, userId } = updateFileDto;
-    console.log(updateFileDto);
-
-    const file = await this.prisma.file.findUnique({
-      where: {
-        id
-      }
+  public async upload(dto: UploadFileDTO, buffer: Buffer): Promise<FileModel> {
+    const ownerId = dto.userId;
+    const filename = dto.filename;
+    const contentType = getContentTypeFromFilename(filename);
+    const contentLength = buffer.byteLength;
+    const key = await this.fileStorageService.saveFile(buffer);
+    const file = FileModel.create({
+      ownerId,
+      filename,
+      contentType,
+      contentLength,
+      key
     });
+    const savedFile = await this.fileRepository.save(file);
+    if (!savedFile) {
+      throw new Error('Failed to save file');
+    }
+    return savedFile;
+  }
+
+  public async delete(id: number): Promise<boolean> {
+    const file = await this.fileRepository.findById(id);
     if (!file) {
       return false;
     }
-    await this.prisma.file.update({
-      where: {
-        id: file.id
-      },
-      data: {
-        filename,
-        ownerId: userId
-      }
-    });
-    return true;
+    const isSuccess = await this.fileRepository.delete(file);
+    if (!isSuccess) {
+      return false;
+    }
+    return this.fileStorageService.deleteFile(file.key);
   }
 
-  async remove(id: number): Promise<boolean> {
-    const file = await this.prisma.file.findUnique({
-      where: {
-        id
-      }
-    });
+  public async rename(id: number, filename: string): Promise<boolean> {
+    const file = await this.fileRepository.findById(id);
     if (!file) {
       return false;
     }
-    await this.prisma.file.delete({
-      where: {
-        id
-      }
-    });
-    const fileModel = FileFactory.entityToModel(file);
-    const path = getFilePath(fileModel);
-    await fs.unlink(path);
-    return true;
+    console.log(file.filename.value)
+    file.rename(filename);
+    console.log(file.filename.value)
+    return !!this.fileRepository.save(file);
+  }
+
+  public async changeOwner(id: number, ownerId: number): Promise<boolean> {
+    const file = await this.fileRepository.findById(id);
+    if (!file) {
+      return false;
+    }
+    file.changeOwner(ownerId);
+    return !!(await this.fileRepository.save(file));
   }
 }

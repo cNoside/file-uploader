@@ -6,7 +6,13 @@ import { User } from 'modules/users';
 import { UsersService } from '../../users/users.service';
 
 interface IFileProps {
-  id: Id;
+  key: string;
+  filename: string;
+  contentLength: number;
+  contentType: string;
+  ownerId: number;
+}
+interface IFileModelProps {
   key: string;
   filename: Filename;
   contentLength: Size;
@@ -15,43 +21,56 @@ interface IFileProps {
 }
 
 export class FileModel {
-  private constructor(private readonly props: IFileProps) {}
+  private constructor(
+    private readonly props: IFileModelProps,
+    private readonly _id?: Id
+  ) {}
 
-  get id(): Id {
-    return this.props.id;
+  public get id(): Id | null | undefined {
+    return this._id;
   }
 
-  get key(): string {
+  public get key(): string {
     return this.props.key;
   }
 
-  get filename(): Filename {
+  public get filename(): Filename {
     return this.props.filename;
   }
 
-  get contentLength(): Size {
+  public get contentLength(): Size {
     return this.props.contentLength;
   }
 
-  get contentType(): string {
+  public get contentType(): string {
     return this.props.contentType;
   }
 
-  get ownerId(): number {
+  public get ownerId(): number {
     return this.props.ownerId;
   }
 
-  static create(props: FileEntity): FileModel {
-    const { id, filename, contentType, contentLength, ownerId, key } = props;
+  public rename(filename: string): void {
+    this.props.filename = Filename.create({ value: filename });
+  }
 
-    return new FileModel({
-      id: Id.create({ value: id }),
-      filename: Filename.create({ value: filename }),
-      contentType: contentType,
-      contentLength: Size.create({ value: contentLength }),
-      ownerId: ownerId,
-      key: key
-    });
+  public changeOwner(ownerId: number): void {
+    this.props.ownerId = ownerId;
+  }
+
+  static create(props: IFileProps, id?: number): FileModel {
+    const { filename, contentType, contentLength, ownerId, key } = props;
+
+    return new FileModel(
+      {
+        filename: Filename.create({ value: filename }),
+        contentType: contentType,
+        contentLength: Size.create({ value: contentLength }),
+        ownerId: ownerId,
+        key: key
+      },
+      id ? Id.create({ value: id }) : undefined
+    );
   }
 }
 

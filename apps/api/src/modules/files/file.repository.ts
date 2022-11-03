@@ -20,45 +20,45 @@ export class FileRepository implements IFileRepository {
   ) {}
 
   public async findAll(): Promise<FileModel[]> {
-    const entities = await this.prisma.file.findMany();
-    return entities.map(this.fileMapper.toModel);
+    const files = await this.prisma.file.findMany();
+    return files.map(this.fileMapper.toModel);
   }
 
   public async findAllByOwnerId(ownerId: number): Promise<FileModel[]> {
-    const entities = await this.prisma.file.findMany({
+    const files = await this.prisma.file.findMany({
       where: {
         ownerId
       }
     });
-    return entities.map(this.fileMapper.toModel);
+    return files.map(this.fileMapper.toModel);
   }
 
   public async findById(id: number): Promise<FileModel> {
-    const entity = await this.prisma.file.findUnique({
+    const file = await this.prisma.file.findUnique({
       where: {
         id
       }
     });
-    return this.fileMapper.toModel(entity);
+    return file ? this.fileMapper.toModel(file) : null;
   }
 
   public async findByKey(key: string): Promise<FileModel> {
-    const entity = await this.prisma.file.findUnique({
+    const file = await this.prisma.file.findUnique({
       where: {
         key
       }
     });
-    return this.fileMapper.toModel(entity);
+    return file ? this.fileMapper.toModel(file) : null;
   }
 
   public async delete(model: FileModel): Promise<boolean> {
     try {
-      const entity = await this.prisma.file.findUnique({
+      const file = await this.prisma.file.findUnique({
         where: {
           id: model.id.value
         }
       });
-      if (!entity) {
+      if (!file) {
         return false;
       }
       await this.prisma.file.delete({
@@ -73,19 +73,20 @@ export class FileRepository implements IFileRepository {
     }
   }
 
-  public async save(model: FileModel): Promise<boolean> {
+  public async save(model: FileModel): Promise<false | FileModel> {
     try {
-      const { id, ...entity } = this.fileMapper.toEntity(model);
+      const file = this.fileMapper.toEntity(model);
 
-      await this.prisma.file.upsert({
+      const updatedFile = await this.prisma.file.upsert({
         where: {
-          id: id
+          id: file.key ? undefined : file.id ? file.id : undefined,
+          key: file.key ? file.key : undefined
         },
-        update: entity,
-        create: entity
+        update: file,
+        create: file
       });
 
-      return true;
+      return this.fileMapper.toModel(updatedFile);
     } catch (error) {
       console.error(error);
       return false;
