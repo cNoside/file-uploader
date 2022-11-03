@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'modules/prisma';
+import { Injectable } from '@nestjs/common';
 import { CreateFileDto } from './dto/create-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
 import { FileFactory } from './factories/file.factory';
@@ -8,30 +7,36 @@ import { v4 as uuidv4 } from 'uuid';
 import { promises as fs } from 'fs';
 import * as mime from 'mime-types';
 import { getFilePath } from './utils';
+import { FileRepository } from './file.repository';
+import { FSFileStorageService } from '../storage/fs-storage.service';
 
 // TODO: abstract lower level CRUD operations into a generic repository
 // TODO: only leave domain specific operations in this service, e.g. findByOwnerId, rename, etc.
 
+interface IFileService {}
+
 @Injectable()
-export class FilesService {
-  constructor(private prisma: PrismaService) {}
+export class FileService implements IFileService {
+  constructor(private readonly fileRepository: FileRepository, fileStorageService: FSFileStorageService) {}
 
   async findAll(): Promise<FileModel[]> {
-    const files = await this.prisma.file.findMany();
-    return files.map(FileFactory.entityToModel);
+    const files = await this.fileRepository.findAll();
+    return files;
   }
 
-  async findOne(id: number): Promise<FileModel> {
-    const file = await this.prisma.file.findUnique({
-      where: {
-        id
-      }
-    });
-    if (!file) {
-      return null;
-    }
+  async findAllByOwnerId(ownerId: number): Promise<FileModel[]> {
+    const files = await this.fileRepository.findAllByOwnerId(ownerId);
+    return files;
+  }
 
-    return FileFactory.entityToModel(file);
+  async findById(id: number): Promise<FileModel> {
+    const file = await this.fileRepository.findById(id);
+    return file;
+  }
+
+  async findByKey(key: string): Promise<FileModel> {
+    const file = await this.fileRepository.findByKey(key);
+    return file;
   }
 
   async create(dto: CreateFileDto, data: Buffer): Promise<FileModel> {
@@ -49,14 +54,14 @@ export class FilesService {
         contentLength: data.byteLength
       }
     });
-    await fs.writeFile(`${process.env.STORAGE_PATH}/${key}.${extension}`, data);
+    // await fs.writeFile(`${process.env.STORAGE_PATH}/${key}.${extension}`, data);
 
     return FileFactory.entityToModel(fileEntity);
   }
 
   async update(id: number, updateFileDto: UpdateFileDto): Promise<boolean> {
     const { filename, userId } = updateFileDto;
-    console.log(updateFileDto)
+    console.log(updateFileDto);
 
     const file = await this.prisma.file.findUnique({
       where: {

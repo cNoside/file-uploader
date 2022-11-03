@@ -16,12 +16,13 @@ import {
 import { FilesService } from './files.service';
 import { CreateFileDto } from './dto/create-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
-import { FileMap } from './mappers/file.map';
+import { FileMap } from './mappers/file.mapper';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { getFilePath } from './utils';
 import { FileFactory } from './factories/file.factory';
 import * as send from 'send';
 import { Request, Response } from 'express';
+import * as pathModule from 'path';
 
 @Controller('files')
 export class FilesController {
@@ -87,7 +88,6 @@ export class FilesController {
     if (!file) {
       throw new NotFoundException();
     }
-
     const path = getFilePath(file);
     return res.sendFile(path);
   }

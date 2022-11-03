@@ -1,4 +1,4 @@
-export class FileDTO {
+export interface IFileDTO {
   readonly id: number;
   readonly ownerId: number;
   readonly filename: string;

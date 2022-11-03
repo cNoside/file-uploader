@@ -54,3 +54,5 @@ export class FileModel {
     });
   }
 }
+
+export const File = FileModel;

@@ -32,6 +32,7 @@ import { client } from '../../../../../shared/config/axios.config';
 import { Menu } from '@mantine/core';
 import NextLink from 'next/link';
 import { IconLink } from '@tabler/icons';
+import { useDisclosure } from '@mantine/hooks';
 
 type Props = {
   file: IFile;
@@ -103,8 +104,10 @@ export const TableRow = (props: Props) => {
       }
     }
   );
-  const handleDelete = () => {
-    deleteMutation.mutate();
+  const [menuOpened, menuHandlers] = useDisclosure(false);
+  const handleDelete = async () => {
+    await deleteMutation.mutateAsync();
+    menuHandlers.close();
   };
 
   return (
@@ -200,14 +203,21 @@ export const TableRow = (props: Props) => {
               </Popover.Dropdown>
             </Popover>
           </Group>
-          <Menu width={200}>
+          <Menu
+            width={200}
+            opened={menuOpened}
+            onChange={menuHandlers.toggle}
+            closeOnItemClick={false}
+          >
             <Menu.Target>
               <ActionIcon ml="sm">
                 <IconChevronDown />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Item>Share</Menu.Item>
+              <Menu.Item color="blue" icon={<IconShare size={14} />}>
+                Share
+              </Menu.Item>
               <Menu.Item
                 onClick={handleDelete}
                 color="red"
