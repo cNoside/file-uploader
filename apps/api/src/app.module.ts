@@ -7,6 +7,7 @@ import { FoldersModule } from './modules/folders/folders.module';
 import { PrismaModule } from 'modules/prisma';
 import { StorageModule } from 'modules/storage/storage.module';
 import { FSFileStorageService } from './modules/storage/fs-file-storage.service';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { FSFileStorageService } from './modules/storage/fs-file-storage.service'
     }),
     FilesModule,
     FoldersModule,
-    PrismaModule
+    PrismaModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService]

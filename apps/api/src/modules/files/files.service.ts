@@ -101,9 +101,7 @@ export class FileService implements IFileService {
     if (!file) {
       return false;
     }
-    console.log(file.filename.value)
     file.rename(filename);
-    console.log(file.filename.value)
     return !!this.fileRepository.save(file);
   }
 

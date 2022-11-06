@@ -6,7 +6,8 @@ import {
   Table,
   Badge,
   TextInput,
-  ActionIcon
+  ActionIcon,
+  Center
 } from '@mantine/core';
 import { useState, useEffect, useRef } from 'react';
 import { FileNameInput } from './name-input.component';
@@ -79,6 +80,13 @@ export const TableSection = (props: Props) => {
         <thead>{headers}</thead>
         <tbody>{rows}</tbody>
       </Table>
+      {files.length === 0 && (
+        <Center>
+          <Text py="xl" size="lg" weight="500">
+            No files
+          </Text>
+        </Center>
+      )}
     </section>
   );
 };

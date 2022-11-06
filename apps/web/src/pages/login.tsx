@@ -5,6 +5,7 @@ import { Button, Container, createStyles, Group, Title } from '@mantine/core';
 
 import { useSession } from 'modules/auth';
 import { NextPageWithLayout } from 'shared/types';
+import { Form } from 'shared/components';
 
 const useStyles = createStyles((theme) => {
   return {
@@ -14,8 +15,7 @@ const useStyles = createStyles((theme) => {
       justifyContent: 'center',
       paddingTop: '4rem',
       paddingBottom: '10rem',
-      minHeight: 'calc(100vh - 80px)',
-      textAlign: 'center'
+      minHeight: 'calc(100vh - 80px)'
     }
   };
 });
@@ -41,37 +41,20 @@ const Login: NextPageWithLayout = () => {
     mutation.mutate({ email: 'test@internal.com', password: 'test' });
   };
 
-  const handleAdminLogin = async () => {
-    mutation.mutate({ email: 'root@internal.com', password: 'root' });
-  };
-
   return (
     <>
       <NextSeo title="Login" />
       <Container className={classes.container} size="xs">
-        <Title>Login Demo</Title>
-        <Group>
-          <Button
-            mt="lg"
-            style={{
-              flexGrow: 1
-            }}
-            color="orange"
-            onClick={handleLogin}
-          >
-            Login
-          </Button>
-          <Button
-            mt="lg"
-            style={{
-              flexGrow: 1
-            }}
-            color="orange"
-            onClick={handleAdminLogin}
-          >
-            Login as Admin
-          </Button>
-        </Group>
+        <Title align="center" order={1}>
+          Login
+        </Title>
+        <Form>
+          <Form.TextInput name="email" label="Email" />
+          <Form.PasswordInput mt="sm" name="password" label="Password" />
+        </Form>
+        <Button mt="lg" color="orange" onClick={handleLogin}>
+          Login
+        </Button>
         <Button
           mt="sm"
           variant="outline"
@@ -85,5 +68,9 @@ const Login: NextPageWithLayout = () => {
     </>
   );
 };
+
+// Login.getLayout = (page) => {
+//   return <>{page}</>;
+// };
 
 export default Login;

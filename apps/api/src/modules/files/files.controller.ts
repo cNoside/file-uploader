@@ -12,7 +12,9 @@ import {
   UploadedFile,
   Req,
   Res,
-  BadRequestException
+  BadRequestException,
+  UseGuards,
+  Request
 } from '@nestjs/common';
 import { FileService } from './files.service';
 import { UploadFileDTO } from './dto/upload-file.dto';
@@ -22,13 +24,15 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { getFilePath } from './utils';
 import { FileFactory } from './factories/file.factory';
 import * as send from 'send';
-import { Request, Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import * as pathModule from 'path';
 import { FileStorage } from 'modules/storage/decorators/file-storage.decorator';
 import { IFileStorageService } from 'modules/storage/models/file-storage-service.model';
 import stream from 'stream';
 import { RenameFileDto } from './dto/rename-file.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+// @UseGuards(JwtAuthGuard)
 @Controller('files')
 export class FilesController {
   constructor(

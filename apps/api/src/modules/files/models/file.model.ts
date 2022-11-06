@@ -3,7 +3,6 @@ import { File as FileEntity } from '@prisma/client';
 
 import { Id, Filename, Url, Size } from '../value-objects';
 import { User } from 'modules/users';
-import { UsersService } from '../../users/users.service';
 
 interface IFileProps {
   key: string;

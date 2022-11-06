@@ -6,13 +6,13 @@ import * as morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  // app.useGlobalPipes(new ValidationPipe());
 
   app.enableCors();
   app.use(morgan('dev'));
 
   app.useStaticAssets(process.env.STORAGE_PATH, {
-    prefix: process.env.FILES_STATIC_PATH
+    prefix: '/uploads'
   });
 
   await app.listen(5000);
